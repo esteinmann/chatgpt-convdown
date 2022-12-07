@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2022 Erik Steinmann
+ * 
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 function getFileName() {
     // Date formatting suggested by ChatGPT, asked for filename safe ISO date as string ...
     const date = new Date();
