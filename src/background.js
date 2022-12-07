@@ -1,4 +1,5 @@
 function getFileName() {
+    // Date formatting suggested by ChatGPT, asked for filename safe ISO date as string ...
     const date = new Date();
     const isoDateString = date.toISOString();
     const formattedDateString = isoDateString.replace(/[^a-zA-Z0-9]/g, '');
@@ -29,12 +30,7 @@ function notify(message) {
     );
 }
 
-function startup() {
-    // Set linebreak based on OS (default is \n).
-    // if(navigator.userAgent.indexOf("Windows") != -1) {
-    //      lineBreak = "\r\n";
-    // }
-}
+function startup() {}
 
 browser.runtime.onMessage.addListener(notify);
 browser.runtime.onStartup.addListener(startup);
@@ -48,6 +44,12 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId !== "download-conversation") {
         return;
     }
+    
+    if (info.pageUrl !== "https://chat.openai.com/chat")
+    {
+        console.log("Only works on https://chat.openai.com/chat");
+        return;
+    }
          
     try {
         await browser.scripting.executeScript({
@@ -55,22 +57,36 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
                 tabId: tab.id,
             },
             func: () => {                
+                // Determine line break character based on platform. Default to LF.
+                var lineBreak = "\n";
+                if(navigator.userAgent.indexOf("Windows") != -1) {
+                    // CLRF on Windows
+                    lineBreak = "\r\n";
+                }
+                
                 // XPath is based on suggestions by ChatGPT ...
-                const matches = document.evaluate("//main//div[not(*) or p]", document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);                
+                const matches = document.evaluate("//main//div[not(*) or p]", document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);                                
                 var match = matches.iterateNext();
                 var conversation = "";
                 var counter = 0;
                 while (match) {
+                    // Skip empty or final node in <main>.
+                    if ((match.textContent === "") ||
+                        (match.textContent === null) || 
+                        (match.textContent.indexOf("Free Research Preview:") >= 0)) {
+                        match = matches.iterateNext();
+                        continue;
+                    }
                     // Assuming the first matched node is always the users question ...
                     const actor = (counter % 2) === 0 ? "You" : "ChatGPT";
-                    conversation += "[" + actor + "]: " + match.textContent + "\n\n";
+                    conversation += "[" + actor + "]: " + match.textContent + lineBreak + lineBreak;
                     match = matches.iterateNext();
                     counter++;
                 }
                                 
-                if (counter > 0) {                    
-                    console.log("Your conversation with ChatGPT:\n" + conversation);
-                    // Notify.                
+                if (counter > 0) {
+                    console.log("Your conversation with ChatGPT:" + lineBreak + lineBreak + conversation);
+                    // Notify background script of new conversation content to create a download for.                
                     browser.runtime.sendMessage({"content": conversation});
                 } else {
                     console.log("No conversation with ChatGPT found to download.");
