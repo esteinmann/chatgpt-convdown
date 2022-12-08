@@ -1,4 +1,4 @@
-ChatGPT Conversation Downloader is an extension to help you save your interesting conversation with ChagGPT as a plain text file.
+ChatGPT Conversation Downloader is a Firefox extension to help you save your interesting conversation with ChagGPT as a plain text file.
 
 ## Usage
 
@@ -18,4 +18,8 @@ Sample of the conversation as textfile:
 [ChatGPT]: The joke is a play on words. "Why was the math book sad?" is a question that implies the math book is capable of feeling emotions. The answer, "Because it had too many problems," plays on the double meaning of the word "problems" - it can refer to difficult math equations, but it can also refer to things that cause sadness or distress. In this case, the joke is suggesting that the math book is sad because it contains a lot of difficult equations, or "problems" in the math sense of the word.
 ```
 
+## Installation
 
+To install the published version: https://addons.mozilla.org/nl/firefox/addon/chatgpt-convdown/
+
+You can either download a release zipfile or checkout this repo. Then navigate to `about:debugging#/runtime/this-firefox` use the load temporary add-on button to add the `manifest.json` from the downloaded zipfile or from the `src` folder if you cloned the repo to add this extension to firefox temporarily (it will be gone after a restart).
