@@ -5,14 +5,14 @@
  */
 
 const download = () => {
-    // Determine line break character based on platform. Default to LF.
+    // Determine line break character based on platform. Default to LF on non-Windows platforms.
     var lineBreak = "\n";
     if(navigator.userAgent.indexOf("Windows") != -1) {
         // CLRF on Windows
         lineBreak = "\r\n";
     }
     
-    // XPath is based on suggestions by ChatGPT ...
+    // XPath is based on suggestions by ChatGPT ... Should find divs under <main> that contain <p> or no other elements (only text).
     const matches = document.evaluate("//main//div[not(*) or p]", document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);                                
     var match = matches.iterateNext();
     var conversation = "";
@@ -23,13 +23,13 @@ const download = () => {
             (match.textContent === null) || 
             (match.textContent.indexOf("Free Research Preview:") >= 0)) {
             match = matches.iterateNext();
-        continue;
-            }
-            // Assuming the first matched node is always the users question ...
-            const actor = (counter % 2) === 0 ? "You" : "ChatGPT";
-            conversation += "[" + actor + "]: " + match.textContent + lineBreak + lineBreak;
-            match = matches.iterateNext();
-            counter++;
+            continue;
+        }
+        // Assuming the first matched node is always the users question ...
+        const actor = (counter % 2) === 0 ? "You" : "ChatGPT";
+        conversation += "[" + actor + "]: " + match.textContent + lineBreak + lineBreak;
+        match = matches.iterateNext();
+        counter++;
     }
     
     if (counter > 0) {

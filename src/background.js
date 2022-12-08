@@ -8,11 +8,11 @@ function getFileName() {
     // Date formatting suggested by ChatGPT, asked for filename safe ISO date as string ...
     const date = new Date();
     const isoDateString = date.toISOString();
-    const formattedDateString = isoDateString.replace(/[^a-zA-Z0-9]/g, '');
+    const formattedDateString = isoDateString.replace(/[^a-zA-Z0-9]/g, "");
     return "chatgpt_conversation_" + formattedDateString + ".txt";
 }
 
-function notify(message) {
+browser.runtime.onMessage.addListener((message) => {
     const url = URL.createObjectURL(new Blob([message.content], { type: "text/plain" }));
     console.log("URL: " + url);
     browser.downloads.download({
@@ -34,9 +34,6 @@ function notify(message) {
             URL.revokeObjectURL(url);
         }
     );
-}
+});
 
-function startup() {}
-
-browser.runtime.onMessage.addListener(notify);
-browser.runtime.onStartup.addListener(startup);
+browser.runtime.onStartup.addListener(() => {});
