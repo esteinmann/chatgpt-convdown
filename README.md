@@ -2,6 +2,6 @@ ChatGPT Conversation Downloader is an extension to help you save your interestin
 
 ## Usage
 
-Install the extension and when you right-click on a page it should give your the "Download the conversation" menu option. Click this and a file will be downloaded in the format "chatgpt_conversation_{datetime}.txt".
+Install the extension and when you right-click on a page it should add a download button to the nav menu on the left side (see screenshot). Click this and a file will be downloaded in the format "chatgpt_conversation_{datetime}.txt".
 
-![screenshot of the context menu](docs/media/context_menu.png)
+![screenshot of the context menu](docs/media/button.png)
