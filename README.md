@@ -20,6 +20,6 @@ Sample of the conversation as textfile:
 
 ## Installation
 
-To install the published version: https://addons.mozilla.org/nl/firefox/addon/chatgpt-convdown/
+To install the latest published version (uploaded to Mozilla): https://addons.mozilla.org/nl/firefox/addon/chatgpt-convdown/
 
-You can either download a release zipfile or checkout this repo. Then navigate to `about:debugging#/runtime/this-firefox` use the load temporary add-on button to add the `manifest.json` from the downloaded zipfile or from the `src` folder if you cloned the repo to add this extension to firefox temporarily (it will be gone after a restart).
+You can either download a [release zipfile](https://github.com/esteinmann/chatgpt-convdown/releases) or `git clone` this repo. Then navigate to `about:debugging#/runtime/this-firefox` in Firefox. Use the load temporary add-on button to add the `manifest.json` from the zip or from the `src` folder. This should add the extension to Firefox temporarily (it will be gone after you close Firefox).
