@@ -1,21 +1,27 @@
-ChatGPT Conversation Downloader is a Firefox extension to help you save your interesting conversation with ChagGPT as a plain text file.
+ChatGPT Conversation Downloader is a Firefox extension to help you save your interesting conversation with ChatGPT as a Markdown (.md) file.
 
 ## Usage
 
-Install the extension and it should add a download button to the nav menu on the left side (see screenshot). Click this and a file will be downloaded in the format "chatgpt_conversation_{datetime}.txt".
+Install the extension and it should add a download button to the nav menu on the left side (see screenshot). Click this and a file will be downloaded in the format "chatgpt_conversation_{datetime}.md".
 
 ![screenshot of the context menu](docs/media/button.png)
 
-Sample of the conversation as textfile:
+Sample of the conversation as Markdown:
 
 ```
-[You]: Can you tell me a joke?
+### You
+Can you tell me a joke?
 
-[ChatGPT]: Sure! Here's one: Why was the math book sad? Because it had too many problems.
+### ChatGPT
 
-[You]: Can you explain that joke?
+Sure, here's one: Why was the math book sad? Because it had too many problems.
 
-[ChatGPT]: The joke is a play on words. "Why was the math book sad?" is a question that implies the math book is capable of feeling emotions. The answer, "Because it had too many problems," plays on the double meaning of the word "problems" - it can refer to difficult math equations, but it can also refer to things that cause sadness or distress. In this case, the joke is suggesting that the math book is sad because it contains a lot of difficult equations, or "problems" in the math sense of the word.
+### You
+Can you explain that joke?
+
+### ChatGPT
+
+The joke is based on a play on words. "Why was the math book sad?" is a question that is asking for a reason why the math book might be feeling sad. The answer is "Because it had too many problems," which is a reference to the fact that math books often include a large number of problems for students to solve. The word "problems" can refer to both the mathematical problems found in a math book, and to things that cause sadness or difficulties. So, the joke is saying that the math book is sad because it has a lot of things (i.e., mathematical problems) that are difficult or challenging.
 ```
 
 ## Installation
