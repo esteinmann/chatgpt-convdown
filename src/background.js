@@ -9,11 +9,11 @@ function getFileName() {
     const date = new Date();
     const isoDateString = date.toISOString();
     const formattedDateString = isoDateString.replace(/[^a-zA-Z0-9]/g, "");
-    return "chatgpt_conversation_" + formattedDateString + ".txt";
+    return "chatgpt_conversation_" + formattedDateString + ".md";
 }
 
 browser.runtime.onMessage.addListener((message) => {
-    const url = URL.createObjectURL(new Blob([message.content], { type: "text/plain" }));
+    const url = URL.createObjectURL(new Blob([message.content], { type: "text/markdown" }));
     console.log("URL: " + url);
     browser.downloads.download({
         url: url,

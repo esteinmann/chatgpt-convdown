@@ -4,6 +4,70 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+// The following method is (almost) entirely written by ChatGPT and so I'm uncertaing regarding the license ...
+const htmlToMarkdown = (html, lb) => {
+    // Create a new DOMParser to parse the HTML string
+    const parser = new DOMParser();
+    
+    // Parse the HTML string and get the document object
+    const doc = parser.parseFromString(html, "text/html");
+    
+    // Initialize an empty markdown string
+    var markdown = "";
+    
+    // Scrub button nodes.
+    const buttonNodes = doc.querySelectorAll("button");
+    buttonNodes.forEach((node) => {
+        if (node.parentNode) {
+            node.parentNode.removeChild(node);
+        };
+    });
+    
+    // Iterate over all elements in the document
+    doc.body.childNodes.forEach(node => {
+        // If the element is a paragraph, add it to the markdown string with the appropriate formatting
+        if (node.nodeName === "P") {
+            markdown += `${lb}${node.textContent}${lb}`;
+            return;
+        }
+        
+        // If the element is a preformatted code block, add it to the markdown string with the appropriate formatting
+        if (node.nodeName === "PRE") {                        
+            // Start code block
+            markdown += `${lb}\`\`\`${lb}`;
+            // Content
+            markdown += node.textContent;
+            // End code block
+            markdown += `${lb}\`\`\`${lb}`;
+            return;
+        }
+        
+        // If the element is an unordered list, add its items to the markdown string with the appropriate formatting
+        if (node.nodeName === "UL") {
+            markdown += lb;
+            node.querySelectorAll("li").forEach(li => {
+                markdown += `- ${li.textContent}${lb}`;
+            });
+            return;
+        }
+        
+        // If the element is an ordered list, add its items to the markdown string with the appropriate formatting
+        if (node.nodeName === "OL") {
+            markdown += lb;
+            node.querySelectorAll("li").forEach((li, index) => {
+                markdown += `${index + 1}. ${li.textContent}${lb}`;
+            });
+            return;
+        }
+        
+        // Fall back on unprocessed textContent if other tag is encountered.
+        markdown += `${lb}${node.textContent}${lb}`;
+    });
+    
+    // Return the resulting markdown string
+    return markdown;
+}
+
 const download = () => {
     // Determine line break character based on platform. Default to LF on non-Windows platforms.
     var lineBreak = "\n";
@@ -25,9 +89,16 @@ const download = () => {
             match = matches.iterateNext();
             continue;
         }
-        // Assuming the first matched node is always the users question ...
-        const actor = (counter % 2) === 0 ? "You" : "ChatGPT";
-        conversation += "[" + actor + "]: " + match.textContent + lineBreak + lineBreak;
+        // Assuming the first matched node is always the users question ...        
+        var actor = "You";
+        var content = match.textContent + lineBreak;
+        if ((counter % 2) === 1) {
+            // ChatGPT answers
+            actor = "ChatGPT";
+            content = htmlToMarkdown(match.innerHTML, lineBreak);            
+        }
+        
+        conversation += `### ${actor}` + lineBreak + content + lineBreak;
         match = matches.iterateNext();
         counter++;
     }
@@ -37,7 +108,7 @@ const download = () => {
         // Notify background script of new conversation content to create a download for.                
         browser.runtime.sendMessage({"content": conversation});
     } else {
-        console.log("No conversation with ChatGPT found to download.");
+        alert("Sorry, but there doesn't seem to be any conversation on this tab.");
     }
 };
 
