@@ -92,7 +92,7 @@ const download = () => {
     }
     
     // XPath is based on suggestions by ChatGPT ... Should find divs under <main> that contain <p> or no other elements (only text).
-    const matches = document.evaluate("//main//div[not(*) or p]", document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);                                
+    const matches = document.evaluate("//main//div[not(*) or p or pre]", document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);                                
     var match = matches.iterateNext();
     var conversation = "";
     var counter = 0;
