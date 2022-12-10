@@ -21,7 +21,7 @@ const htmlToMarkdown = (html, lb) => {
         if (node.parentNode) {
             node.parentNode.removeChild(node);
         };
-    });
+    });    
     
     // Iterate over all elements in the document
     doc.body.childNodes.forEach(node => {
@@ -32,9 +32,24 @@ const htmlToMarkdown = (html, lb) => {
         }
         
         // If the element is a preformatted code block, add it to the markdown string with the appropriate formatting
-        if (node.nodeName === "PRE") {                        
-            // Start code block
-            markdown += `${lb}\`\`\`${lb}`;
+        if (node.nodeName === "PRE") {
+            var lang = "";
+            // Find the code tag
+            const elements = node.getElementsByTagName("code");
+            if (elements) {
+                // Assume just one <code> tag inside this <pre> so take the class from the first one.
+                const codeClass = elements[0].className;
+                // Find the language.
+                const regex = /language-(\w+)/;
+                const result = regex.exec(codeClass);
+                if (result && result.length >= 2) {
+                    // The matching group should be the second element of the results array.
+                    lang = result[1];
+                }
+            }
+            
+            // Start code block with the language (if found)
+            markdown += `${lb}\`\`\`` + lang + lb;
             // Content
             markdown += node.textContent;
             // End code block
