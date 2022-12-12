@@ -2,23 +2,14 @@
     "manifest_version": 2,
     "name": "ChatGPT ConvDown",
     "description": "Downloads the current thread from your conversation with ChatGPT as plain text.",
-    "version": "3.2",
+    "version": "3.3",
     "homepage_url": "https://github.com/esteinmann/chatgpt-convdown",
-    
-    "background": {
-        "scripts": [
-            "background.js"
-        ],
-        "persistent": false
-    },
-    
+        
     "content_scripts": [
     {
         "matches": ["*://chat.openai.com/chat"],
         "js": ["content.js"]
     }],
         
-    "permissions": [
-        "downloads"
-    ]
+    "permissions": []
 }
