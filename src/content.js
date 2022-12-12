@@ -4,6 +4,13 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+const constructFileName = () => {
+    const isoDateString = (new Date()).toISOString();
+    // Remove all characters that could cause trouble in a filename.
+    const formattedDateString = isoDateString.replace(/[^a-zA-Z0-9]/g, "");
+    return `chatgpt_conversation_${formattedDateString}.md`;
+}
+
 // The following method is (almost) entirely written by ChatGPT and so I'm uncertaing regarding the license ...
 const htmlToMarkdown = (html, lb) => {
     // Create a new DOMParser to parse the HTML string
@@ -120,8 +127,13 @@ const download = () => {
     
     if (counter > 0) {
         console.log("Your conversation with ChatGPT:" + lineBreak + lineBreak + conversation);
-        // Notify background script of new conversation content to create a download for.                
-        browser.runtime.sendMessage({"content": conversation});
+        
+        // Create a temporary <a> element to initiate the download.
+        const url = URL.createObjectURL(new Blob([conversation], { type: "text/markdown" }));
+        const link = document.createElement('a');
+        link.download = constructFileName();
+        link.href = url;
+        link.click();
     } else {
         alert("Sorry, but there doesn't seem to be any conversation on this tab.");
     }
