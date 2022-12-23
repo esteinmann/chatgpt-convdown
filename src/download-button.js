@@ -156,7 +156,7 @@ setTimeout(() => {
     };
     
     // Check if download button was already added before altering document. Sometimes ChatGPT appears to 'hang' and clicking on individual chats keeps adding download buttons. The following check should prevent hat.
-    if buttonExists() {
+    if (buttonExists()) {
         // Already added the button. return.
         console.error("ChatGPT ConvDown: Download button already added to the document!");
         return;
