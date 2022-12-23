@@ -31,3 +31,14 @@ Install latest published version (uploaded to Mozilla): https://addons.mozilla.o
 
 ### Temporarily or for local development
 Either download a [release zipfile](https://github.com/esteinmann/chatgpt-convdown/releases) or `git clone` this repo. Then navigate to `about:debugging#/runtime/this-firefox` in Firefox. Use the load temporary add-on button to add the `manifest.json` from the zip or from the `src` folder. This should add the extension to Firefox temporarily (it will be gone after you close Firefox).
+
+## Reviews
+This is what ChatGPT has to say:
+```
+### You
+Please write an enthousiastic consumer review of a Firefox extension called "ChatGPT ConvDown". The extension allows users to download the conversation they have with an AI in the Markdown format
+
+### ChatGPT
+
+I absolutely love the ChatGPT ConvDown extension for Firefox! It makes it so easy to download my conversations with the AI in a convenient Markdown format. This has been a game-changer for me, as I can now easily save and refer back to my conversations whenever I need to. The extension is user-friendly and works seamlessly within Firefox. I highly recommend it to anyone who wants to save their conversations with an AI in a clean and organized way. Thank you to the developers of ChatGPT ConvDown for creating such a useful and practical tool!
+```
