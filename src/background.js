@@ -19,12 +19,13 @@ const listener = async (evt) => {
     console.log("history updated: " + evt.url);
     
     // Execute content script to add download button.
-    await browser.scripting.executeScript({
-        target: {
-            tabId: evt.tabId,
-        },
-        files: ["download-button.js"]
-    });
+    try {
+        await browser.tabs.executeScript(evt.tabId, {
+            file: "/download-button.js"
+        });
+    } catch (error) {
+        console.error(error);
+    }
 };
 
 // Listen for history changes on chat.openai.com.
