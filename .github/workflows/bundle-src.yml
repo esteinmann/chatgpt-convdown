@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Zip src folder
-        run: zip -r chrome-extension.zip src
+        run: zip -r chrome-extension.zip $GITHUB_WORKSPACE/src
 
       - name: Upload zip file as artifact
         uses: actions/upload-artifact@v2
