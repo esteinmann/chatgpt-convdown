@@ -10,7 +10,7 @@ jobs:
       - name: Zip src folder
         uses: montudor/action-zip@v1
         with:
-          args: zip -qq -r chrome-extension.zip dir
+          args: zip -qq -r chrome-extension.zip -i src
 
       - name: Add comment with download link
         run: |
