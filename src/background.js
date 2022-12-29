@@ -4,6 +4,11 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+// Add shim to make chrome supported when browser is used
+if (typeof browser === "undefined") {
+    browser = chrome;
+}
+
 // Filter so the history update events are only triggered for chat.openai.com.
 const filter = {    
     url: [{hostEquals: "chat.openai.com"}]

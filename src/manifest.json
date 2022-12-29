@@ -8,7 +8,9 @@
     "background": {
         "scripts": ["background.js"]
     },
-        
+    "web_accessible_resources": [
+        "media/*"
+    ],
     "permissions": [
         "webNavigation",
         "*://chat.openai.com/chat/*"
