@@ -8,18 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Zip src folder
-        run: zip -y -r chrome-extension.zip $GITHUB_WORKSPACE/src
-
-      - name: Upload zip file as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/zip-it-and-ship-it@v2
         with:
-          name: chrome-extension.zip
-          path: chrome-extension.zip
+          path: src
+          archive: chrome-extension.zip
 
       - name: Add comment with download link
         run: |
-          ZIP_URL="https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ github.sha }}/chrome-extension.zip"
-          COMMENT="The src folder has been bundled into a zip file: $ZIP_URL"
+          COMMENT="The src folder has been bundled into a zip file: ${{ env.GITHUB_ARTIFACT_URL }}"
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             PAYLOAD="{\"body\": \"$COMMENT\"}"
             curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d "$PAYLOAD" "https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.number }}/comments"
