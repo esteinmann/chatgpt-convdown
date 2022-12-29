@@ -4,6 +4,12 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+// Add shim to make chrome supported when browser is used
+if (typeof browser === "undefined") {
+    browser = chrome;
+}
+
+
 // Execute after a time-out (1 sec now) to prevent our changes to the DOM being reset.
 setTimeout(() => {
     const constructFileName = () => {
