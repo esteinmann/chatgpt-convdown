@@ -7,8 +7,8 @@ jobs:
   bundle:
     runs-on: ubuntu-latest
     steps:
-      - name: Zip src folder
-        uses: montudor/action-zip@v1
+      - uses: actions/checkout@v1
+      - uses: montudor/action-zip@v1
         with:
           args: zip -qq -r chrome-extension.zip src
 
