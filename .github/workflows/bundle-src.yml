@@ -2,9 +2,7 @@ name: Bundle src folder
 on:
   push:
     branches: [main]
-  dispatch:
-    types: [bundle]
-
+  workflow_dispatch:
 jobs:
   bundle:
     runs-on: ubuntu-latest
