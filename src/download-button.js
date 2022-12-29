@@ -83,6 +83,28 @@ setTimeout(() => {
                 });
                 return;
             }
+
+            // If the element is a table, add its rows to the markdown string with the appropriate formatting
+            // Make sure a header deliniator is added after the header row contents.
+            if (node.nodeName === "TABLE") {
+                markdown += lb;
+                node.querySelectorAll("tr").forEach((tr, index) => {
+                    // Add header deliniator after header row.
+                    if (index === 1) {
+                        markdown += "|";
+                        tr.querySelectorAll("td").forEach(th => {
+                            markdown += `---|`;
+                        });
+                        markdown += lb;
+                    }
+                    markdown += "|";
+                    tr.querySelectorAll("td, th").forEach(td => {
+                        markdown += ` ${td.textContent} |`;
+                    });
+                    markdown += lb;
+                });
+                return;
+            }
             
             // Fall back on unprocessed textContent if other tag is encountered.
             markdown += `${lb}${node.textContent}${lb}`;
