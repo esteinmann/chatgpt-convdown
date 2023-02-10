@@ -9,7 +9,6 @@ if (typeof browser === "undefined") {
     browser = chrome;
 }
 
-
 // Execute after a time-out (1 sec now) to prevent our changes to the DOM being reset.
 setTimeout(() => {
     const constructFileName = (conversationName) => {
@@ -24,7 +23,7 @@ setTimeout(() => {
             return `ChatGPT_${formattedDateString}_${nameWithoutInvalidChar}.md`;
         }
         else {
-            return `ChatGPT_${formattedDateString}_unknown_name.md`;
+            return `ChatGPT_${formattedDateString}.md`;
         }
     }
     
@@ -57,7 +56,7 @@ setTimeout(() => {
             
             // If the element is a preformatted code block, add it to the markdown string with the appropriate formatting
             if (node.nodeName === "PRE") {
-                var lang = "";
+                var lang = null;
 
                 // Find the code tag
                 /*const elements = node.getElementsByTagName("code");
@@ -83,12 +82,28 @@ setTimeout(() => {
                     }
                 }
                 
-                // Start code block with the language (if found)
-                markdown += `${lb}\`\`\`` + lang + lb;
-                // Content
-                markdown += node.textContent;
+                if (lang) {
+                    // Start code block with the language (if found)
+                    markdown += `${lb}\`\`\`` + lang + lb;
+
+                    // Content
+                    if (node.textContent.startsWith(lang)) {
+                        markdown += node.textContent.slice(lang.length);
+                    }
+                    else {
+                        markdown += node.textContent;
+                    }
+                }
+                else {
+                    markdown += `${lb}\`\`\`` + lb;
+
+                    // Content
+                    markdown += node.textContent;
+                }
+
                 // End code block
                 markdown += `${lb}\`\`\`${lb}`;
+                
                 return;
             }
             
@@ -173,7 +188,7 @@ setTimeout(() => {
         var counter = 0;
 
         if (conversationName)
-            conversation += "# ChatGPT conversation about: " + conversationName + lineBreak + lineBreak;
+            conversation += "# " + conversationName + lineBreak + lineBreak;
 
         while (match) {
             // Skip empty or final node in <main>.
