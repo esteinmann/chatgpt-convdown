@@ -9,14 +9,22 @@ if (typeof browser === "undefined") {
     browser = chrome;
 }
 
-
 // Execute after a time-out (1 sec now) to prevent our changes to the DOM being reset.
 setTimeout(() => {
-    const constructFileName = () => {
+    const constructFileName = (conversationName) => {
         const isoDateString = (new Date()).toISOString();
+
         // Remove all characters that could cause trouble in a filename.
         const formattedDateString = isoDateString.replace(/[^a-zA-Z0-9]/g, "");
-        return `chatgpt_conversation_${formattedDateString}.md`;
+
+        if (conversationName) {
+            const nameWithoutInvalidChar = conversationName.replace(/[^A-Za-z0-9_\.\-\/]/g, '');
+
+            return `ChatGPT_${formattedDateString}_${nameWithoutInvalidChar}.md`;
+        }
+        else {
+            return `ChatGPT_${formattedDateString}.md`;
+        }
     }
     
     // The following method is for a big part written by ChatGPT and so I'm uncertaing regarding the license ...
@@ -48,9 +56,10 @@ setTimeout(() => {
             
             // If the element is a preformatted code block, add it to the markdown string with the appropriate formatting
             if (node.nodeName === "PRE") {
-                var lang = "";
+                var lang = null;
+
                 // Find the code tag
-                const elements = node.getElementsByTagName("code");
+                /*const elements = node.getElementsByTagName("code");
                 if (elements) {
                     // Assume just one <code> tag inside this <pre> so take the class from the first one.
                     const codeClass = elements[0].className;
@@ -61,14 +70,40 @@ setTimeout(() => {
                         // The matching group should be the second element of the results array.
                         lang = result[1];
                     }
+                }*/
+
+                // Alternative matching method propsed by ChatGPT
+                const divElement = node.querySelector(".bg-black");
+                if (divElement)
+                {
+                    const spanElement = divElement.querySelector(".flex > span");
+                    if (spanElement) {
+                        lang = spanElement.textContent;
+                    }
                 }
                 
-                // Start code block with the language (if found)
-                markdown += `${lb}\`\`\`` + lang + lb;
-                // Content
-                markdown += node.textContent;
+                if (lang) {
+                    // Start code block with the language (if found)
+                    markdown += `${lb}\`\`\`` + lang + lb;
+
+                    // Content
+                    if (node.textContent.startsWith(lang)) {
+                        markdown += node.textContent.slice(lang.length);
+                    }
+                    else {
+                        markdown += node.textContent;
+                    }
+                }
+                else {
+                    markdown += `${lb}\`\`\`` + lb;
+
+                    // Content
+                    markdown += node.textContent;
+                }
+
                 // End code block
                 markdown += `${lb}\`\`\`${lb}`;
+                
                 return;
             }
             
@@ -128,11 +163,33 @@ setTimeout(() => {
             lineBreak = "\r\n";
         }
         
+        // Extract the name that OpenAI has assigned to the selected conversation
+        var conversationName = null;
+
+        // XPath is also written by ChatGPT :-)
+        const conversationNameNode = document.evaluate(
+            "//div[starts-with(@class,'flex-col flex-1 overflow-y-auto border-b border-white/20 -mr-2')]//a[starts-with(@class,'flex py-3 px-3 items-center gap-3 relative rounded-md cursor-pointer break-all pr-14 bg-gray-800 hover:bg-gray-800 group')]/div[@class='flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative']/text()",
+            document,
+            null,
+            XPathResult.ANY_TYPE,
+            null
+        );
+        
+        let matchConversationName = conversationNameNode.iterateNext();
+        if (matchConversationName) {
+            conversationName = matchConversationName.nodeValue;
+        }        
+        
         // XPath is based on suggestions by ChatGPT ... Should find divs under <main> that contain <p> or no other elements (only text).
         const matches = document.evaluate("//main//div[not(*) or p or pre]", document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);                                
         var match = matches.iterateNext();
+        
         var conversation = "";
         var counter = 0;
+
+        if (conversationName)
+            conversation += "# " + conversationName + lineBreak + lineBreak;
+
         while (match) {
             // Skip empty or final node in <main>.
             if ((match.textContent === "") ||
@@ -151,6 +208,7 @@ setTimeout(() => {
                 }
                 
                 conversation += `### ${actor}` + lineBreak + content + lineBreak;
+                
                 match = matches.iterateNext();
                 counter++;
         }
@@ -161,7 +219,7 @@ setTimeout(() => {
             // Create a temporary <a> element to initiate the download.
             const url = URL.createObjectURL(new Blob([conversation], { type: "text/markdown" }));
             const link = document.createElement('a');
-            link.download = constructFileName();
+            link.download = constructFileName(conversationName);
             link.href = url;
             link.click();
         } else {
