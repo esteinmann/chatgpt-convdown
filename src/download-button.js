@@ -2,11 +2,31 @@
  * Copyright (C) 2022 Erik Steinmann
  * 
  * SPDX-License-Identifier: GPL-3.0-or-later
- */
+ */ 
 
 // Add shim to make chrome supported when browser is used
+var isChrome = false;
 if (typeof browser === "undefined") {
+    isChrome = true;
     browser = chrome;
+}
+
+// Default to the green arrow icon.
+var iconType = "green";
+
+// Get the configured iconType from storage.
+if (isChrome) {
+    browser.storage.local.get("iconType", (item) => {
+        iconType = item.iconType;
+    });
+} else {
+    browser.storage.local.get("iconType").then(
+        (item) => {            
+            iconType = item.iconType;
+        },
+        (error) => {
+            console.log(`Error: ${error}`);
+        });
 }
 
 // Execute after a time-out (1 sec now) to prevent our changes to the DOM being reset.
@@ -248,17 +268,31 @@ setTimeout(() => {
         return;
     }
     
-    // Create the <img> element.
-    const imgElement = document.createElement("img");
-    imgElement.src = browser.runtime.getURL("media/download.png");
-    imgElement.width = "1em";
-    imgElement.height = "1em";
-    imgElement.classList.add("w-4", "h-4");
-    
+    // Create the icon element for the download button.
+    var iconElement = null;
+    if (iconType === "bootstrap") {
+        // Bootstrap download icon as SVG. From: https://icons.getbootstrap.com/icons/download/
+        const ns = "http://www.w3.org/2000/svg";
+        iconElement = document.createElementNS(ns, "svg");
+        iconElement.setAttribute("fill", "currentColor");
+        iconElement.setAttribute("viewBox", "0 0 16 16");        
+        path1 = iconElement.appendChild(document.createElementNS(ns, "path"));
+        path1.setAttribute("d", "M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z");
+        path2 = iconElement.appendChild(document.createElementNS(ns, "path"));
+        path2.setAttribute("d", "M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z");        
+    } else {
+        // Green arrow PNG image.
+        iconElement = document.createElement("img");
+        iconElement.src = browser.runtime.getURL("media/download.png");        
+    }
+    iconElement.classList.add("w-4", "h-4");
+    iconElement.width = "1em";
+    iconElement.height = "1em";
+
     // Create the <a> element.
     const aElement = document.createElement("a");
-    aElement.classList.add("flex", "py-3", "px-3", "items-center", "gap-4", "rounded-md", "hover:bg-gray-800", "transition-colors", "duration-200", "text-white", "cursor-pointer", "text-sm", "convdown-probe");
-    aElement.appendChild(imgElement);
+    aElement.classList.add("flex", "py-3", "px-3", "items-center", "gap-3", "rounded-md", "hover:bg-gray-800", "transition-colors", "duration-200", "text-white", "cursor-pointer", "text-sm", "convdown-probe");
+    aElement.appendChild(iconElement);
     var textNode = document.createTextNode("Download");
     aElement.appendChild(textNode);
     aElement.addEventListener('click', (event) => {
