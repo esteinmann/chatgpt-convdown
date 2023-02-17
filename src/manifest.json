@@ -11,8 +11,17 @@
     "web_accessible_resources": [
         "media/*"
     ],
+    "options_ui": {
+        "page": "options.html"
+    },
     "permissions": [
+        "storage",
         "webNavigation",
         "*://chat.openai.com/chat/*"
-    ]
+    ],
+    "applications": {
+        "gecko": {
+            "id": "{6d166753-6d4d-42aa-b190-5bdddde63688}"
+        }
+    }
 }
