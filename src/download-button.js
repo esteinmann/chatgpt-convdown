@@ -6,7 +6,7 @@
 
 // Add shim to make chrome supported when browser is used.
 var isChrome = false;
-if (typeof browser === "undefined" || chromeDetected !== "undefined") {
+if ((typeof browser === "undefined") || (typeof chromeDetected !== "undefined")) {
     isChrome = true;
     // Define this globally so a rerun of this script will see that Chrome was detected previously.
     chromeDetected = true;
