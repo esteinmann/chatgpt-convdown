@@ -2,12 +2,15 @@
  * Copyright (C) 2022 Erik Steinmann
  * 
  * SPDX-License-Identifier: GPL-3.0-or-later
- */ 
+ */
 
-// Add shim to make chrome supported when browser is used
+// Add shim to make chrome supported when browser is used.
 var isChrome = false;
-if (typeof browser === "undefined") {
+if (typeof browser === "undefined" || chromeDetected !== "undefined") {
     isChrome = true;
+    // Define this globally so a rerun of this script will see that Chrome was detected previously.
+    chromeDetected = true;
+    // Assign chrome to the global browser.
     browser = chrome;
 }
 
