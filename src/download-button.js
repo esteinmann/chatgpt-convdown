@@ -81,21 +81,7 @@ setTimeout(() => {
             if (node.nodeName === "PRE") {
                 var lang = null;
 
-                // Find the code tag
-                /*const elements = node.getElementsByTagName("code");
-                if (elements) {
-                    // Assume just one <code> tag inside this <pre> so take the class from the first one.
-                    const codeClass = elements[0].className;
-                    // Find the language.
-                    const regex = /language-(\w+)/;
-                    const result = regex.exec(codeClass);
-                    if (result && result.length >= 2) {
-                        // The matching group should be the second element of the results array.
-                        lang = result[1];
-                    }
-                }*/
-
-                // Alternative matching method propsed by ChatGPT
+                // Find code language (method propsed by ChatGPT)
                 const divElement = node.querySelector(".bg-black");
                 if (divElement)
                 {
@@ -203,8 +189,15 @@ setTimeout(() => {
             conversationName = matchConversationName.nodeValue;
         }        
         
-        // XPath is based on suggestions by ChatGPT ... Should find divs under <main> that contain <p> or no other elements (only text).
-        const matches = document.evaluate("//main//div[not(*) or p or pre]", document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);                                
+        /* 
+            XPath is (partially) based on suggestions by ChatGPT.
+            1. Find divs under <main> of class text-base
+            2. Within these text-base div find the actual content:
+                - Text nodes
+                - <p> elements
+                - <pre> elements (code blocks)
+        */
+        const matches = document.evaluate("//main//div[contains(@class, 'text-base')]//div[not(*) or p or pre]", document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);                                
         var match = matches.iterateNext();
         
         var conversation = "";
@@ -214,26 +207,25 @@ setTimeout(() => {
             conversation += "# " + conversationName + lineBreak + lineBreak;
 
         while (match) {
-            // Skip empty or final node in <main>.
+            // Skip empty node in <main>.
             if ((match.textContent === "") ||
-                (match.textContent === null) || 
-                (match.textContent.indexOf("Free Research Preview:") >= 0)) {
+                (match.textContent === null)) {
                 match = matches.iterateNext();
-            continue;
-                }
-                // Assuming the first matched node is always the users question ...        
-                var actor = "You";
-                var content = match.textContent + lineBreak;
-                if ((counter % 2) === 1) {
-                    // ChatGPT answers
-                    actor = "ChatGPT";
-                    content = htmlToMarkdown(match.innerHTML, lineBreak);            
-                }
-                
-                conversation += `### ${actor}` + lineBreak + content + lineBreak;
-                
-                match = matches.iterateNext();
-                counter++;
+                continue;
+            }
+            // Assuming the first matched node is always the users question ...        
+            var actor = "You";
+            var content = match.textContent + lineBreak;
+            if ((counter % 2) === 1) {
+                // ChatGPT answers
+                actor = "ChatGPT";
+                content = htmlToMarkdown(match.innerHTML, lineBreak);            
+            }
+            
+            conversation += `### ${actor}` + lineBreak + content + lineBreak;
+            
+            match = matches.iterateNext();
+            counter++;
         }
         
         if (counter > 0) {
@@ -250,10 +242,7 @@ setTimeout(() => {
         }
     };
     
-    const buttonExists = () => {
-        // Construct the XPath expression to find an element with the specified class
-        // const xpath = `//nav//*[contains(concat(' ', normalize-space(@class), ' '), '${probeClass}')]`;
-        
+    const buttonExists = () => {        
         // Check for probe class to exist on element within <nav> block.
         const xpath = "//nav//*[contains(@class, 'convdown-probe')]";
         
