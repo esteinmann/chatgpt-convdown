@@ -41,7 +41,7 @@ setTimeout(() => {
         const formattedDateString = isoDateString.replace(/[^a-zA-Z0-9]/g, "");
 
         if (conversationName) {
-            const nameWithoutInvalidChar = conversationName.replace(/[^A-Za-z0-9_\.\-\/]/g, '');
+            const nameWithoutInvalidChar = conversationName.replace(/[^A-Za-z0-9_\-]/g, '');
 
             return `ChatGPT_${formattedDateString}_${nameWithoutInvalidChar}.md`;
         }
@@ -215,14 +215,14 @@ setTimeout(() => {
             }
             // Assuming the first matched node is always the users question ...        
             var actor = "You";
-            var content = match.textContent + lineBreak;
+            var content = lineBreak + match.textContent + lineBreak;
             if ((counter % 2) === 1) {
                 // ChatGPT answers
                 actor = "ChatGPT";
-                content = htmlToMarkdown(match.innerHTML, lineBreak);            
+                content = htmlToMarkdown(match.innerHTML, lineBreak);
             }
             
-            conversation += `### ${actor}` + lineBreak + content + lineBreak;
+            conversation += `### ${actor}` + content + lineBreak;
             
             match = matches.iterateNext();
             counter++;
