@@ -6,6 +6,8 @@ ChatGPT Conversation Downloader is a Firefox* extension to help you save your in
 
 Install the extension and it should add a download button to the nav menu on the left side (see screenshot). Click this and a file will be downloaded in the format "chatgpt_conversation_{datetime}.md".
 
+If the **SHIFT** key is pressed while clicking, the content will be copied to the clipboard instead.
+
 ![screenshot of the context menu](docs/media/button.png)
 
 Sample of the conversation as Markdown:
