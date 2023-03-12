@@ -15,6 +15,7 @@
         "page": "options.html"
     },
     "permissions": [
+        "clipboardWrite",
         "storage",
         "webNavigation",
         "*://chat.openai.com/chat/*"
