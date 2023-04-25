@@ -18,6 +18,7 @@
         "clipboardWrite",
         "storage",
         "webNavigation",
+        "webRequest",
         "*://chat.openai.com/chat/*"
     ],
     "browser_specific_settings": {
