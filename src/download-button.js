@@ -162,7 +162,7 @@ setTimeout(() => {
                 continue;
             }
             const isUser = counter % 2 === 0;
-            conversation += `### ${isUser ? "You" : "ChatGPT"}${
+            conversation += `## ${isUser ? "You" : "ChatGPT"}${
                 isUser
                     ? `${lineBreak}${match.item(0)?.textContent ?? ''}${lineBreak}`
                     : htmlToMarkdown(match, lineBreak)
