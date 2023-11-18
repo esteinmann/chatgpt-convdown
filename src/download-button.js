@@ -155,7 +155,7 @@ setTimeout(() => {
         var conversation = `# ${conversationName}${lineBreak}${lineBreak}`;
         var counter = 0;
 
-        for (const matchEl of document.querySelectorAll('.group .text-base .items-start.whitespace-pre-wrap')) {
+        for (const matchEl of document.querySelectorAll('[data-message-author-role]')) {
             const match = matchEl.firstChild?.children?.length > 0 ? matchEl?.firstChild?.childNodes : matchEl?.childNodes;
 
             if (!match) {
