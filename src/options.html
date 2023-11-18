@@ -5,17 +5,23 @@
   </head>
 
   <body>
-    <form>
-      <div>Download button icon style</div>
+    <form>      
       <div style="margin-bottom: 1em">
-            <input type="radio" id="radio_green" name="iconType" value="green" />
-            <label for="option1">Green arrow</label><br/>
-            <input type="radio" id="radio_bootstrap" name="iconType" value="bootstrap" />
-            <label for="option2">Bootstrap SVG icon</label>
-        </div>
-        <button type="submit">Save</button>
-    </form>
-    
+        <div id="lbl_icon_type">Icon style</div>
+        <select id="select_icon_type" name="iconType">
+          <option value="green" selected>Green arrow</option>
+          <option value="bootstrap">Bootstrap SVG icon</option>
+        </select>
+      </div>
+      <div style="margin-bottom: 1em">
+        <div id="lbl_download_method">Download method</div>
+        <select id="select_download_method" name="downloadMethod">
+          <option value="dom" selected>DOM parsing</option>
+          <option value="api">JSON from API</option>
+        </select>
+      </div>
+      <button type="submit" id="btn_save">Save</button>
+    </form>    
     <script src="options.js"></script>
   </body>
 </html>

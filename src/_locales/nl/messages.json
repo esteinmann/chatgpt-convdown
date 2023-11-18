@@ -1,0 +1,34 @@
+{
+    "settingsIconStyle": {
+        "message": "Stijl van het downloadicoon"
+    },
+    "optionIconGreen": {
+        "message": "Groene pijl"
+    },
+    "optionIconBootstrap": {
+        "message": "Bootstrap SVG-icoon"
+    },
+    "settingsDownloadMethod": {
+        "message": "Methode om chat naar Markdown te converteren"
+    },
+    "optionDom": {
+        "message": "DOM van webpagina chat parseren"
+    },
+    "optionApi": {
+        "message": "JSON van de chat middels API downloaden"
+    },
+    "save": {
+        "message": "Opslaan"
+    },
+    "download": {
+        "message": "Downloaden"
+    },
+    "errorNoConversationDom": {
+        "message": "Er lijkt zich geen gesprek met Chat GPT te bevinden op dit tabblad.",
+        "description": "Message shown to user when parsing of the DOM did not find conversation with Chat GPT."
+    },
+    "errorNoConversationJson": {
+        "message": "JSON van het gesprek is (nog) niet beschikbaar.",
+        "description": "Message shown to user when JSON of the chat is not available."
+    }
+}

@@ -14,26 +14,88 @@ if ((typeof browser === "undefined") || (typeof chromeDetected !== "undefined"))
     browser = chrome;
 }
 
-// Default to the green arrow icon.
+// Defaults.
 var iconType = "green";
+var downloadMethod = "dom";
+var setConfig = (items) => {
+    if (items.iconType) {
+        iconType = items.iconType;
+    }
+    if (items.downloadMethod) {
+        downloadMethod = items.downloadMethod;
+    }
+};
 
 // Get the configured iconType from storage.
 if (isChrome) {
-    browser.storage.local.get("iconType", (item) => {
-        iconType = item.iconType;
-    });
+    // Chrome et al.
+    browser.storage.local.get(null, setConfig);
 } else {
-    browser.storage.local.get("iconType").then(
-        (item) => {
-            iconType = item.iconType;
-        },
+    // Firefox.
+    browser.storage.local.get().then(setConfig,
         (error) => {
             console.log(`Error: ${error}`);
         });
 }
 
+var conversationJson = "";
+var messageListener = (data) => {
+    if (data.type === "conversation_ready") {
+        conversationJson = data.json;
+    }
+    return false;
+};
+
+if (!browser.runtime.onMessage.hasListener(messageListener)) {
+    browser.runtime.onMessage.addListener(messageListener);
+}
+
 // Execute after a time-out (1 sec now) to prevent our changes to the DOM being reset.
 setTimeout(() => {
+    // Determine line break character based on platform. Default to LF on non-Windows platforms.
+    var lineBreak = "\n";
+    if(navigator.userAgent.indexOf("Windows") != -1) {
+        // CRLF on Windows
+        lineBreak = "\r\n";
+    }
+
+    const addButtonForCurrentChat = () => {
+        const probeElement = document.querySelector("#chatgpt_convdown_button");
+        if (probeElement) {
+            return;
+        }
+        
+        // Replicate the share button but with a download icon.
+        const outerDiv = document.createElement("div");
+        outerDiv.id = "chatgpt_convdown_button";
+        outerDiv.classList.add("flex", "flex-shrink", "flex-row");
+        const outerSpan = document.createElement("span");
+        outerDiv.appendChild(outerSpan);
+        const innerSpan = document.createElement("span");
+        outerSpan.appendChild(innerSpan);
+        const button = document.createElement("a");
+        button.classList.add("flex", "cursor-pointer");
+        button.setAttribute("aria-label", "Downloaduh!");
+        innerSpan.appendChild(button);
+        
+        iconElement = document.createElement("img");
+        iconElement.src = browser.runtime.getURL("media/download.png");
+        iconElement.style.width = "1em";
+        iconElement.style.height = "1em";
+        button.appendChild(iconElement);
+        button.addEventListener('click', (event) => { alert("Hoi!"); });
+
+        // TODO: Construct copy button for top bar.
+    
+        const shareButton = document.querySelector("button[aria-label='Share chat']");
+        if (shareButton) {
+            const insertBeforeElement = shareButton.parentElement.parentElement.parentElement;
+            if (insertBeforeElement) {
+                insertBeforeElement.insertAdjacentElement("beforebegin", outerDiv);
+            }
+        }
+    };
+        
     const constructFileName = (conversationName) => {
         const isoDateString = (new Date()).toISOString();
 
@@ -48,6 +110,15 @@ setTimeout(() => {
         else {
             return `ChatGPT_${formattedDateString}.md`;
         }
+    }
+
+    const startDownload = (title, content) => {
+        // Create a temporary <a> element to initiate the download.
+        const url = URL.createObjectURL(new Blob([content], { type: "text/markdown" }));
+        const link = document.createElement('a');
+        link.download = constructFileName(title);
+        link.href = url;
+        link.click();
     }
 
     // The following method is for a big part written by ChatGPT and so I'm uncertaing regarding the license ...
@@ -141,14 +212,7 @@ setTimeout(() => {
         return markdown;
     }
 
-    const download = (event) => {
-        // Determine line break character based on platform. Default to LF on non-Windows platforms.
-        var lineBreak = "\n";
-        if(navigator.userAgent.indexOf("Windows") != -1) {
-            // CLRF on Windows
-            lineBreak = "\r\n";
-        }
-
+    const downloadByParsingDom = (event) => {
         // Extract the name that OpenAI has assigned to the selected conversation
         const conversationName = document?.querySelector('title')?.innerText ?? 'Unknown';
 
@@ -176,27 +240,85 @@ setTimeout(() => {
             if (event.shiftKey) {
                 navigator.clipboard.writeText(conversation);
                 return;
-            }
-            // Create a temporary <a> element to initiate the download.
-            const url = URL.createObjectURL(new Blob([conversation], { type: "text/markdown" }));
-            const link = document.createElement('a');
-            link.download = constructFileName(conversationName);
-            link.href = url;
-            link.click();
+            }            
+            startDownload(conversationName, conversation);
         } else {
-            alert("Sorry, but there doesn't seem to be any conversation on this tab.");
+            alert(browser.i18n.getMessage("errorNoConversationDom"));
         }
     };
 
+    const downloadByParsingJson = (event) => {                        
+        const conversation = JSON.parse(conversationJson);
+        
+        // Get title.
+        console.log(`Conversation title: ${conversation.title}`);
+        var markdown = `# ${conversation.title}${lineBreak}${lineBreak}`;
+        
+        // Iterate over messages.
+        var index = 0;
+        for (const messageGuid in conversation.mapping) {            
+            if (!conversation.mapping[messageGuid]["message"]) {
+                continue;
+            }
+            const message = conversation.mapping[messageGuid].message;
+            index++;
+            var role = message.author.role;
+            console.log(`Message ${index} (${message.id}) by ${role}`);
+            if (role === "system") {
+                continue;
+            }
+            if (role === "user") {
+                markdown += `## You${lineBreak}`;
+            }
+            if (role === "assistant") {
+                markdown += `## ChatGPT${lineBreak}`;
+            }
+
+            // Get content of the message.
+            if (message.content) {
+                if(message.content.content_type !== "text") {
+                    markdown += `Content of type [${message.content.content_type}]${lineBreak}${lineBreak}`;
+                    continue;
+                }
+                
+                for (const part of message.content.parts) {
+                    markdown += `${part}${lineBreak}${lineBreak}`;
+                }
+            }
+        }
+
+        if (event.shiftKey) {
+            navigator.clipboard.writeText(markdown);
+            return;
+        }
+        startDownload(conversation.title, markdown);
+    };
+
+    const download = (event) => {
+        if (downloadMethod === "dom") {
+            // 'old' behavior. Parse current DOM and convert to markdown for download.        
+            downloadByParsingDom(event);
+        } else {
+            // 'new' behavior. Call background script to get conversation content.
+            if (!conversationJson) {
+                alert(browser.i18n.getMessage("errorNoConversationJson"));
+                return;
+            }
+            downloadByParsingJson(event);
+        }
+    };
+                
     const buttonExists = () => {
         // Check for probe class to exist on element within <nav> block.
         return !!document.querySelector('nav a.convdown-probe');
     };
 
-    // Check if download button was already added before altering document. Sometimes ChatGPT appears to 'hang' and clicking on individual chats keeps adding download buttons. The following check should prevent hat.
-    if (buttonExists()) {
-        // Already added the button. return.
-        console.error("ChatGPT ConvDown: Download button already added to the document!");
+    // Try to add button at the top.
+    addButtonForCurrentChat();
+
+    // Check if download button in nav was already added before altering document. Sometimes ChatGPT appears to 'hang' and clicking on individual chats keeps adding download buttons. The following check should prevent hat.
+    if (buttonExists()) {        
+        console.log("ChatGPT ConvDown: Download button already added to the document!");
         return;
     }
 
@@ -225,11 +347,11 @@ setTimeout(() => {
     const aElement = document.createElement("a");
     aElement.classList.add("flex", "py-3", "px-3", "items-center", "gap-3", "rounded-md", "hover:bg-gray-800", "transition-colors", "duration-200", "text-white", "cursor-pointer", "text-sm", "convdown-probe");
     aElement.appendChild(iconElement);
-    var textNode = document.createTextNode("Download");
+    var textNode = document.createTextNode(browser.i18n.getMessage("download"));
     aElement.appendChild(textNode);
     aElement.addEventListener('click', download);
 
     // Get the <nav> element and append <a> to it.
     const nav = document.querySelector("nav");
-    nav.appendChild(aElement);
+    nav.appendChild(aElement);    
 }, 1000);

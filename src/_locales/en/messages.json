@@ -1,0 +1,34 @@
+{
+    "settingsIconStyle": {
+        "message": "Style of the download icon"
+    },
+    "optionIconGreen": {
+        "message": "Green arrow"
+    },
+    "optionIconBootstrap": {
+        "message": "Bootstrap SVG icon"
+    },
+    "settingsDownloadMethod": {
+        "message": "Method used to convert the chat to Markdown"
+    },
+    "optionDom": {
+        "message": "Parse the DOM of chat page"
+    },
+    "optionApi": {
+        "message": "Download JSON of chat using API"
+    },
+    "save": {
+        "message": "Save"
+    },
+    "download": {
+        "message": "Download"
+    },
+    "errorNoConversationDom": {
+        "message": "There doesn't seem to be a conversation with Chat GPT on this tab.",
+        "description": "Message shown to user when parsing of the DOM did not find conversation with Chat GPT."
+    },
+    "errorNoConversationJson": {
+        "message": "JSON of the conversation not ready to download (yet).",
+        "description": "Message shown to user when JSON of the chat is not available."
+    }
+}

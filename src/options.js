@@ -11,37 +11,72 @@ if (typeof browser === "undefined") {
     browser = chrome;
 }
 
-function saveOptions(e) {
+const saveOptions = (e) => {
     e.preventDefault();    
     const formData = new FormData(document.querySelector("form"));
     browser.storage.local.set({
-        iconType: formData.get("iconType")
+        iconType: formData.get("iconType"),
+        downloadMethod: formData.get("downloadMethod")
     });
-}
+};
 
-function restoreOptions() {
-    function setCurrentChoice(result) {
-        if (result.iconType) {
-            // Check radio button from iconType value.
-            document.querySelector("#radio_" + result.iconType).checked = true;
-        } else {
-            // Check first radio button.
-            document.querySelector("#radio_green").checked = true;
+const replaceText = (id, messageKey) => {
+    const el = document.querySelector(`#${id}`);
+    if (el) {
+        el.innerText = browser.i18n.getMessage(messageKey);
+    }
+};
+
+const replaceOptionValue = (selectId, optionValue, messageKey) => {
+    const el = document.querySelector(`#${selectId} option[value='${optionValue}']`);
+    if (el) {
+        el.innerText = browser.i18n.getMessage(messageKey);
+    }
+};
+
+const localize = () => {
+    // Replace text in divs.        
+    replaceText("lbl_icon_type", "settingsIconStyle");
+    replaceText("lbl_download_method", "settingsDownloadMethod");
+    replaceText("btn_save", "save");
+    // Replace text in options.
+    replaceOptionValue("select_icon_type", "green", "optionIconGreen");
+    replaceOptionValue("select_icon_type", "bootstrap", "optionIconBootstrap");
+    replaceOptionValue("select_download_method", "dom", "optionDom");
+    replaceOptionValue("select_download_method", "api", "optionApi");
+};
+
+const restoreOptions = () => {        
+    const setCurrentChoice = (result) => {
+        if (result.iconType) {                        
+            document.querySelector("#select_icon_type").value = result.iconType;
+        } else {            
+            // Default
+            document.querySelector("#select_icon_type").value = "green";
         }
-    }
+        if (result.downloadMethod) {
+            document.querySelector("#select_download_method").value = result.downloadMethod;
+        } else {
+            // Default
+            document.querySelector("#select_download_method").value = "dom";
+        }
+    };
 
-    function onError(error) {
+    const onError = (error) => {
         console.log(`Error: ${error}`);
-    }
+    };
+    
+    // Translate the options UI if possible.
+    localize();
 
     if (isChrome) {
         // Chrome (probably) pass callback to get().
-        browser.storage.local.get("iconType", setCurrentChoice);
+        browser.storage.local.get(null, setCurrentChoice);
     } else {
-        // On Firefox (probably) handle promise.
-        browser.storage.local.get("iconType").then(setCurrentChoice, onError);
+        // On Firefox (probably) handle promise.        
+        browser.storage.local.get().then(setCurrentChoice, onError);
     }
-}
+};
 
 document.addEventListener("DOMContentLoaded", restoreOptions);
 document.querySelector("form").addEventListener("submit", saveOptions);

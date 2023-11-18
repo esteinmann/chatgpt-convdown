@@ -4,6 +4,7 @@
     "description": "Downloads the current thread from your conversation with ChatGPT as plain text.",
     "version": "6.0",
     "homepage_url": "https://github.com/esteinmann/chatgpt-convdown",
+    "default_locale": "en",
     
     "background": {
         "scripts": ["background.js"]
@@ -19,7 +20,8 @@
         "storage",
         "webNavigation",
         "webRequest",
-        "*://chat.openai.com/chat/*"
+        "webRequestBlocking",
+        "*://chat.openai.com/*"
     ],
     "browser_specific_settings": {
         "gecko": {

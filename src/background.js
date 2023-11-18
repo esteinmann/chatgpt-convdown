@@ -39,15 +39,50 @@ const listener = async (evt) => {
     const matches = evt.url.match(guidRegex);
     if (matches) {
         // Store / overwrite tab ID for use in HTTP resonse listener.
-        conversationsTabs[matches[0]] = evt.tabId;
+        conversationsTabs[matches[0]] = {
+            tabId: evt.tabId,
+            json: "" // Conversation from chat.openai.com API as JSON text.
+        };
     }
     
-    // Execute content script to add download button.    
+    // TODO Fetch the chat from the API so we don't need to intercept the call.
+    // -- That will be hard, need the credentials from the API call.    
+    
+    // Execute content script to add download button.
     await runContentScript(evt.tabId);
 };
 
-const responseListener = async (evt) => {
-    console.log("response from: " + evt.url);
+const responseStartedListener = async (req) => {
+    console.log(`req started response from: ${req.url}`);
+
+    const matches = req.url.match(guidRegex);
+    if (!matches) {
+        return;
+    }
+
+    if (!conversationsTabs[matches[0]]) {
+        return;
+    }
+
+    const filter = browser.webRequest.filterResponseData(req.requestId);
+    const decoder = new TextDecoder("utf-8");
+    var textContent = "";
+
+    filter.ondata = (event) => {
+        console.log(`filter.ondata received ${event.data.byteLength} bytes`);
+        let str = decoder.decode(event.data, { stream: true });
+        textContent += str;
+        filter.write(event.data);
+    };
+
+    filter.onstop = () => {
+        filter.close();        
+        conversationsTabs[matches[0]].json = textContent;
+    };
+};
+
+const responseCompletedListener = async (evt) => {
+    console.log(`req completed response from: ${evt.url}`);
     
     // Extract conversation GUID from URL.
     const matches = evt.url.match(guidRegex);
@@ -56,17 +91,31 @@ const responseListener = async (evt) => {
     }
 
     // Lookup tab by conversation GUID.
-    const tabId = conversationsTabs[matches[0]];
+    if (!conversationsTabs[matches[0]]) {
+        return;
+    }
+                
+    const tabId = conversationsTabs[matches[0]].tabId;
     if (tabId === undefined) {
         return;
     }
     
     // Execute content script to add download button.
     await runContentScript(tabId);
+    browser.tabs.sendMessage(
+        tabId,
+        {
+            type: "conversation_ready",
+            json: conversationsTabs[matches[0]].json
+        }
+    );
 };
 
 // Listen for history changes on chat.openai.com.
 browser.webNavigation.onHistoryStateUpdated.addListener(listener, filter);
 // Listen for HTTP requests to chat.openai.com/backend-api/conversation.
-browser.webRequest.onCompleted.addListener(responseListener,
+browser.webRequest.onBeforeRequest.addListener(responseStartedListener,
+    {urls: ["https://chat.openai.com/backend-api/conversation/*"]},
+    ["blocking"]);
+browser.webRequest.onCompleted.addListener(responseCompletedListener,
     {urls: ["https://chat.openai.com/backend-api/conversation/*"]});
