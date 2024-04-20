@@ -152,8 +152,8 @@ setTimeout(() => {
         // Extract the name that OpenAI has assigned to the selected conversation
         const conversationName = document?.querySelector('title')?.innerText ?? 'Unknown';
 
-        var conversation = `# ${conversationName}${lineBreak}${lineBreak}`;
-        var counter = 0;
+        let conversation = `# ${conversationName}${lineBreak}${lineBreak}`;
+        let foundConversation = false;
 
         for (const matchEl of document.querySelectorAll('[data-message-author-role]')) {
             const match = matchEl.firstChild?.children?.length > 0 ? matchEl?.firstChild?.childNodes : matchEl?.childNodes;
@@ -161,31 +161,47 @@ setTimeout(() => {
             if (!match) {
                 continue;
             }
-            const isUser = counter % 2 === 0;
-            conversation += `## ${isUser ? "You" : "ChatGPT"}${
+            foundConversation = true;
+
+            // Get the name of the author
+            const authorRole = matchEl.getAttribute("data-message-author-role");
+            let authorLabel = authorRole;
+            let isUser = false;
+            switch (authorRole) {
+                case "user":
+                    authorLabel = "You";
+                    isUser = true;
+                    break;
+                case "assistant":
+                    authorLabel = "ChatGPT";
+                    break;
+            }
+
+            // Value of the author role attribute should be "user" (You) or "assistant" (ChatGPT)
+            conversation += `## ${authorLabel}${
                 isUser
                     ? `${lineBreak}${match.item(0)?.textContent ?? ''}${lineBreak}`
                     : htmlToMarkdown(match, lineBreak)
-            }${lineBreak}`;
-            counter++;
+            }${lineBreak}`;            
         }
 
-        if (counter > 0) {
-            console.log("Your conversation with ChatGPT:" + lineBreak + lineBreak + conversation);
-
-            if (event.shiftKey) {
-                navigator.clipboard.writeText(conversation);
-                return;
-            }
-            // Create a temporary <a> element to initiate the download.
-            const url = URL.createObjectURL(new Blob([conversation], { type: "text/markdown" }));
-            const link = document.createElement('a');
-            link.download = constructFileName(conversationName);
-            link.href = url;
-            link.click();
-        } else {
+        if (!foundConversation) {
             alert("Sorry, but there doesn't seem to be any conversation on this tab.");
+            return;
         }
+        
+        console.log("Your conversation with ChatGPT:" + lineBreak + lineBreak + conversation);
+
+        if (event.shiftKey) {
+            navigator.clipboard.writeText(conversation);
+            return;
+        }
+        // Create a temporary <a> element to initiate the download.
+        const url = URL.createObjectURL(new Blob([conversation], { type: "text/markdown" }));
+        const link = document.createElement('a');
+        link.download = constructFileName(conversationName);
+        link.href = url;
+        link.click();
     };
 
     const buttonExists = () => {
