@@ -239,7 +239,7 @@ setTimeout(() => {
 
     // Create the <a> element.
     const aElement = document.createElement("a");
-    aElement.classList.add("flex", "py-3", "px-3", "items-center", "gap-3", "rounded-md", "hover:bg-gray-800", "transition-colors", "duration-200", "text-white", "cursor-pointer", "text-sm", "convdown-probe");
+    aElement.classList.add("flex", "py-3", "px-3", "items-center", "gap-3", "rounded-md", "hover:bg-gray-800", "transition-colors", "duration-200", "text-token-text-primary", "cursor-pointer", "text-sm", "convdown-probe");
     aElement.appendChild(iconElement);
     var textNode = document.createTextNode("Download");
     aElement.appendChild(textNode);
