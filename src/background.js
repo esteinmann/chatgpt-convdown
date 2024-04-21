@@ -9,6 +9,8 @@ if (typeof browser === "undefined") {
     browser = chrome;
 }
 
+var activeTabId = null;
+
 // Filter so the history update events are only triggered for chat.openai.com.
 const filter = {    
     url: [{hostEquals: "chat.openai.com"}]
@@ -28,6 +30,7 @@ const listener = async (evt) => {
         await browser.tabs.executeScript(evt.tabId, {
             file: "/download-button.js"
         });
+        activeTabId = evt.tabId;
     } catch (error) {
         console.error(error);
     }
@@ -35,3 +38,19 @@ const listener = async (evt) => {
 
 // Listen for history changes on chat.openai.com.
 browser.webNavigation.onHistoryStateUpdated.addListener(listener, filter);
+
+// Listen for command execution.
+browser.commands.onCommand.addListener((command) => {
+    if (!activeTabId) {
+        return;
+    }
+
+    switch(command) {
+        case "download":
+            browser.tabs.sendMessage(activeTabId, { type: "download" });
+            break;
+        case "copy":
+            browser.tabs.sendMessage(activeTabId, { type: "copy"});
+            break;    
+    }    
+});

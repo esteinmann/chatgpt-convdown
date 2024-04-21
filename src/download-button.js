@@ -249,4 +249,16 @@ setTimeout(() => {
     // Get the <nav> element and append <a> to it.
     const nav = document.querySelector("nav");
     nav.appendChild(aElement);
+
+    // Listen to messages from the background script.
+    browser.runtime.onMessage.addListener((request) => {
+        switch(request.type) {
+            case "download":
+                download(false);
+                break;
+            case "copy":
+                download(true);
+                break;
+        }
+    });
 }, 1000);
