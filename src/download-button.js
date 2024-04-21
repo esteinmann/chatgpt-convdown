@@ -141,7 +141,7 @@ setTimeout(() => {
         return markdown;
     }
 
-    const download = (event) => {
+    const download = (copyToClipboard) => {
         // Determine line break character based on platform. Default to LF on non-Windows platforms.
         var lineBreak = "\n";
         if(navigator.userAgent.indexOf("Windows") != -1) {
@@ -192,10 +192,11 @@ setTimeout(() => {
         
         console.log("Your conversation with ChatGPT:" + lineBreak + lineBreak + conversation);
 
-        if (event.shiftKey) {
+        if (copyToClipboard) {
             navigator.clipboard.writeText(conversation);
             return;
         }
+
         // Create a temporary <a> element to initiate the download.
         const url = URL.createObjectURL(new Blob([conversation], { type: "text/markdown" }));
         const link = document.createElement('a');
@@ -243,7 +244,7 @@ setTimeout(() => {
     aElement.appendChild(iconElement);
     var textNode = document.createTextNode("Download");
     aElement.appendChild(textNode);
-    aElement.addEventListener('click', download);
+    aElement.addEventListener('click', (event) => download(event.shiftKey));
 
     // Get the <nav> element and append <a> to it.
     const nav = document.querySelector("nav");
