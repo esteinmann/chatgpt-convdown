@@ -24,5 +24,19 @@
         "gecko": {
             "id": "{6d166753-6d4d-42aa-b190-5bdddde63688}"
         }
+    },
+    "commands": {
+        "download": {
+            "description": "Downloads the conversation",
+            "suggested_key": {
+                "default": "Ctrl+Alt+S"
+            }
+        },
+        "copy": {
+            "description": "Copy the conversation to clipboard",
+            "suggested_key": {
+                "default": "Ctrl+Alt+C"
+            }
+        }
     }
 }
