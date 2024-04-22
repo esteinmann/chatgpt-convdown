@@ -28,6 +28,10 @@ Can you explain that joke?
 The joke is based on a play on words. "Why was the math book sad?" is a question that is asking for a reason why the math book might be feeling sad. The answer is "Because it had too many problems," which is a reference to the fact that math books often include a large number of problems for students to solve. The word "problems" can refer to both the mathematical problems found in a math book, and to things that cause sadness or difficulties. So, the joke is saying that the math book is sad because it has a lot of things (i.e., mathematical problems) that are difficult or challenging.
 ```
 
+This extension defines two shortcuts that can be changed / removed in [Firefox](https://support.mozilla.org/en-US/kb/manage-extension-shortcuts-firefox). The default values are
+<kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>S</kbd> for downloading the conversation and
+<kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd> for copying the conversation to the clipboard.
+
 ## Installation
 
 ### Official

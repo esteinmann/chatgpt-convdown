@@ -141,7 +141,7 @@ setTimeout(() => {
         return markdown;
     }
 
-    const download = (event) => {
+    const download = (copyToClipboard) => {
         // Determine line break character based on platform. Default to LF on non-Windows platforms.
         var lineBreak = "\n";
         if(navigator.userAgent.indexOf("Windows") != -1) {
@@ -152,8 +152,8 @@ setTimeout(() => {
         // Extract the name that OpenAI has assigned to the selected conversation
         const conversationName = document?.querySelector('title')?.innerText ?? 'Unknown';
 
-        var conversation = `# ${conversationName}${lineBreak}${lineBreak}`;
-        var counter = 0;
+        let conversation = `# ${conversationName}${lineBreak}${lineBreak}`;
+        let foundConversation = false;
 
         for (const matchEl of document.querySelectorAll('[data-message-author-role]')) {
             const match = matchEl.firstChild?.children?.length > 0 ? matchEl?.firstChild?.childNodes : matchEl?.childNodes;
@@ -161,31 +161,48 @@ setTimeout(() => {
             if (!match) {
                 continue;
             }
-            const isUser = counter % 2 === 0;
-            conversation += `## ${isUser ? "You" : "ChatGPT"}${
+            foundConversation = true;
+
+            // Get the name of the author
+            const authorRole = matchEl.getAttribute("data-message-author-role");
+            let authorLabel = authorRole;
+            let isUser = false;
+            switch (authorRole) {
+                case "user":
+                    authorLabel = "You";
+                    isUser = true;
+                    break;
+                case "assistant":
+                    authorLabel = "ChatGPT";
+                    break;
+            }
+
+            // Value of the author role attribute should be "user" (You) or "assistant" (ChatGPT)
+            conversation += `## ${authorLabel}${
                 isUser
                     ? `${lineBreak}${match.item(0)?.textContent ?? ''}${lineBreak}`
                     : htmlToMarkdown(match, lineBreak)
-            }${lineBreak}`;
-            counter++;
+            }${lineBreak}`;            
         }
 
-        if (counter > 0) {
-            console.log("Your conversation with ChatGPT:" + lineBreak + lineBreak + conversation);
-
-            if (event.shiftKey) {
-                navigator.clipboard.writeText(conversation);
-                return;
-            }
-            // Create a temporary <a> element to initiate the download.
-            const url = URL.createObjectURL(new Blob([conversation], { type: "text/markdown" }));
-            const link = document.createElement('a');
-            link.download = constructFileName(conversationName);
-            link.href = url;
-            link.click();
-        } else {
+        if (!foundConversation) {
             alert("Sorry, but there doesn't seem to be any conversation on this tab.");
+            return;
         }
+        
+        console.log("Your conversation with ChatGPT:" + lineBreak + lineBreak + conversation);
+
+        if (copyToClipboard) {
+            navigator.clipboard.writeText(conversation);
+            return;
+        }
+
+        // Create a temporary <a> element to initiate the download.
+        const url = URL.createObjectURL(new Blob([conversation], { type: "text/markdown" }));
+        const link = document.createElement('a');
+        link.download = constructFileName(conversationName);
+        link.href = url;
+        link.click();
     };
 
     const buttonExists = () => {
@@ -223,13 +240,25 @@ setTimeout(() => {
 
     // Create the <a> element.
     const aElement = document.createElement("a");
-    aElement.classList.add("flex", "py-3", "px-3", "items-center", "gap-3", "rounded-md", "hover:bg-gray-800", "transition-colors", "duration-200", "text-white", "cursor-pointer", "text-sm", "convdown-probe");
+    aElement.classList.add("flex", "py-3", "px-3", "items-center", "gap-3", "rounded-md", "hover:bg-gray-800", "transition-colors", "duration-200", "text-token-text-primary", "cursor-pointer", "text-sm", "convdown-probe");
     aElement.appendChild(iconElement);
     var textNode = document.createTextNode("Download");
     aElement.appendChild(textNode);
-    aElement.addEventListener('click', download);
+    aElement.addEventListener('click', (event) => download(event.shiftKey));
 
     // Get the <nav> element and append <a> to it.
     const nav = document.querySelector("nav");
     nav.appendChild(aElement);
+
+    // Listen to messages from the background script.
+    browser.runtime.onMessage.addListener((request) => {
+        switch(request.type) {
+            case "download":
+                download(false);
+                break;
+            case "copy":
+                download(true);
+                break;
+        }
+    });
 }, 1000);
