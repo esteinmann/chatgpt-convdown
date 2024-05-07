@@ -2,7 +2,7 @@
     "manifest_version": 2,
     "name": "ChatGPT ConvDown",
     "description": "Downloads the current thread from your conversation with ChatGPT as plain text.",
-    "version": "7.0",
+    "version": "7.1",
     "homepage_url": "https://github.com/esteinmann/chatgpt-convdown",
     
     "background": {
@@ -18,7 +18,8 @@
         "clipboardWrite",
         "storage",
         "webNavigation",
-        "*://chat.openai.com/chat/*"
+        "*://chat.openai.com/chat/*",
+        "*://chatgpt.com/**"
     ],
     "browser_specific_settings": {
         "gecko": {

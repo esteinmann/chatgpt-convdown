@@ -13,7 +13,9 @@ var activeTabId = null;
 
 // Filter so the history update events are only triggered for chat.openai.com.
 const filter = {    
-    url: [{hostEquals: "chat.openai.com"}]
+    url: [
+        {hostEquals: "chat.openai.com"},
+        {hostEquals: "chatgpt.com"}]
 };
 
 const listener = async (evt) => {
