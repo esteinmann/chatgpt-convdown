@@ -34,6 +34,226 @@ if (isChrome) {
 
 // Execute after a time-out (1 sec now) to prevent our changes to the DOM being reset.
 setTimeout(() => {
+    // Determine line break character based on platform. Default to LF on non-Windows platforms.
+    const lb = navigator.userAgent.indexOf("Windows") !== -1 ? "\r\n" : "\n";
+    const indentSpaces = 4;
+    const fence = '```';
+
+    // Closure to contain markdown generator / node parser state.
+    const Context = (() => {
+        let markdown = "";
+        let marker = "";
+        let indent = 0;
+        let lineBreaks = true;
+
+        // Markdown writing helpers
+
+        const writeText = (text) => {                
+            markdown += markdown.endsWith(" ") || markdown.endsWith(lb)
+                ? text // Just add the text.
+                : ` ${text}`; // Need to add a space before.
+        };
+
+        const newLine = (ignoreDouble) => {
+            if (markdown.endsWith(`${lb}${lb}`) && !ignoreDouble) {
+                return;
+            }
+            markdown += lb;
+        };
+                    
+        const writeLine = (line) => {
+            let indentText = ' '.repeat(indent * indentSpaces);
+            let markerText = marker !== "" ? `${marker} ` : "";
+            if (lineBreaks) {
+                if (markdown && !markdown.endsWith(lb)) {
+                    newLine();
+                }
+                markdown += `${indentText}${markerText}${line}${lb}`;
+            } else {
+                if (markdown === "" || markdown.endsWith(lb)) {
+                    markdown += `${indentText}${markerText}${line}`;
+                } else {
+                    writeText(line);
+                }
+            }
+        };
+
+        const writeLines = (text) => {
+            text.split(/\r?\n/).forEach(line => {
+                writeLine(line);
+            });
+        };        
+
+        // Node processing
+        
+        const processAsText = (node) => {
+            writeLine(`${node.textContent?.trim() ?? ""}`);
+        };
+                    
+        const processPre = (node) => {
+            lineBreaks = true;
+            const codeNode = node.querySelector('code');
+            if (!codeNode) {
+                processAsText(node);
+                return;
+            }
+            
+            const lang = (Array.from(codeNode.classList?.values() ?? [])).find(s => s.startsWith('language-'))?.substring(9) ?? '';
+            writeLine(`${fence}${lang}`);
+            writeLines(codeNode.textContent);
+            writeLine(fence);
+        };
+
+        const processHeader = (node) => {
+            lineBreaks = true;
+            newLine();
+            writeLine(`### ${node.textContent}`);
+        };
+
+        const processTable = (node) => {                
+            var line = "";
+            // Make sure a header deliniator is added after the header row contents.
+            lineBreaks = true;
+            node.querySelectorAll("tr").forEach((tr, index) => {
+                // Add header deliniator after header row.
+                if (index === 1) {
+                    line += "|";
+                    tr.querySelectorAll("td").forEach(th => {
+                        line += `---|`;
+                    });
+                    writeLine(line);
+                }
+                line = "|";
+                tr.querySelectorAll("td, th").forEach(td => {
+                    line += ` ${td.textContent} |`;
+                });
+                writeLine(line);
+            });
+        };
+
+        const processCode = (node) => {
+            writeLine(`\`${node.textContent.trim()}\``);
+        };
+
+        const processLink = (node) => {
+            writeLine(`[${node.textContent.trim()}](${node.getAttribute('href') ?? ''})`);
+        };
+
+        const processStrong = (node) => {
+            writeLine(`**${node.textContent.trim()}**`);
+        };
+
+        // Recursive function to process the list structure
+        const processListItems = function(node, indentLevel) {
+            node.children.filter(item => item.nodeName === "LI").forEach((item, index) => {
+                // Determine marker based on list type
+                marker = node.nodeName === "OL" ? `${index + 1}.` : "-";
+                
+                var first = true;
+                item.childNodes.forEach(cn => {
+                    if (cn.nodeName === "UL" || cn.nodeName === "OL") {
+                        // List contains another list as list item.
+                        processListItems(cn, indentLevel + 1);
+                    } else {                            
+                        lineBreaks = false;
+                        marker = first ? marker : "";
+                        indent = first ? indentLevel : indentLevel + 1;
+                        processNode(cn);
+                    }
+                    first = false;
+                })
+            })
+        };
+
+        const processListNode = function(node) {
+            processListItems(node, indent);
+            // Reset marker and indent after processing list.
+            marker = "";
+            indent = 0;
+            newLine();
+        };
+
+        const processSpan = (node) => {
+            lineBreaks = false;
+
+            // Span can be used to contain styled link blocks (in this case the paragraph does not contain <a> directly).
+            const linkNode = node.querySelector("a");
+            if (linkNode) {
+                processLink(linkNode);
+                return;
+            }
+            
+            processAsText(node);
+        };
+
+        const processParagrah = (node) => {
+            node.childNodes.forEach(cn => {
+                lineBreaks = false;
+                processNode(cn);
+            });
+            newLine();
+        };
+
+        const processNode = (node) => {
+            switch (node.nodeName) {
+                case "P":
+                    processParagrah(node);
+                    break;
+                case "SPAN":
+                    processSpan(node);
+                    break;
+                case "PRE":
+                    processPre(node);
+                    break;
+                case "UL":
+                case "OL":
+                    processListNode(node);
+                    break;
+                case "TABLE":
+                    processTable(node);
+                    break;
+                case "CODE":
+                    processCode(node);
+                    break;
+                case "A":
+                    processLink(node);
+                    break;
+                case "STRONG":
+                    processStrong(node);
+                    break;
+                case "H1":
+                case "H2":
+                case "H3":
+                    processHeader(node);
+                    break;
+                default:
+                    processAsText(node);
+                    break;
+            }
+        };
+
+        return class {
+            init = () => {
+                markdown = "";
+            };
+
+            newLine = (ignoreDouble) => newLine(ignoreDouble);
+                        
+            setNode = (nd, options) => {
+                lineBreaks = options.lineBreaks;
+                if (options.indent !== null && options.indent !== undefined) {
+                    indent = options.indent;
+                }
+                if (options.marker !== null && options.marker !== undefined) {
+                    marker = options.marker;
+                }
+                processNode(nd);
+            };
+
+            getMarkdown = () => markdown;
+        };
+    })();
+    
     const constructFileName = (conversationName) => {
         const isoDateString = (new Date()).toISOString();
 
@@ -50,140 +270,38 @@ setTimeout(() => {
         }
     }
 
-    // Helper to transform HTML (nested) list (ordered and unordered) structure to markdown. ~80% generated by ChatGPT...
-    const htmlListToMarkdown = (element, lb) => {
-        let markdown = "";
-    
-        // Recursive function to process the list structure
-        function processListItems(list, indentLevel) {
-            const items = list.children;
-            for (let i = 0; i < items.length; i++) {
-                // Determine marker based on list type
-                marker = list.nodeName === "OL" ? `${i+1}.` : "-";
-                const item = items[i];
-    
-                if (item.tagName.toLowerCase() === 'li') {
-                    // Add indent and list item
-                    markdown += `${' '.repeat(indentLevel * 2)}${marker} ${item.firstChild.textContent.trim()}${lb}`;
-    
-                    // If the list item has a nested <ul> or <ol>, process it recursively
-                    const nestedList = item.querySelector('ul, ol');
-                    if (nestedList) {
-                        processListItems(nestedList, indentLevel + 1);
-                    }
-                }
-            }
-        }
-    
-        // Check if the element is a valid list (ol or ul)
-        if (element.nodeName === 'UL' || element.nodeName === 'OL') {
-            processListItems(element, 0);
-        } else {
-            throw new Error('The provided element is not a list.');
-        }
-    
-        return markdown;
-    }
-
-    // The following method is for a big part written by ChatGPT and so I'm uncertaing regarding the license ...
-    const htmlToMarkdown = (chatElement, lb) => {
-        const fence = '```';
-        // Initialize an empty markdown string
-        let markdown = "";
+    const processConversationTurn = (chatElement) => {        
+        const ctx = new Context();
+        ctx.init();
 
         chatElement.forEach(node => {
             // Skip nodes that contain a content warning.
             if (typeof node.querySelector !== 'undefined' && node.querySelector('a[href^="https://platform.openai.com/docs/usage-policies" i]')) {
                 return;
             }
-            // If the element is a paragraph, add it to the markdown string with the appropriate formatting
-            if (node.nodeName === "P") {
-                markdown += lb;
-                for (const subNode of node.childNodes) {
-                    switch (subNode.nodeName) {
-                        case 'A':
-                            // FIXME: No handling for special characters like ()[] in the link or link text.
-                            markdown += `[${subNode.textContent}](${subNode?.getAttribute('href') ?? ''})`;
-                            break;
-                        case 'CODE':
-                            // FIXME: No handling for backticks or other special characters.
-                            markdown += `\`${subNode.textContent}\``;
-                            break;
-                        default: markdown += subNode?.textContent ?? '';
-                    }
-                }
-                markdown += lb;
-                return;
-            }
-
-            // If the element is a preformatted code block, add it to the markdown string with the appropriate formatting
-            if (node.nodeName === "PRE") {
-                const codeEl = node.querySelector('code');
-                if (!codeEl) {
-                    return;
-                }
-                const lang = (Array.from(codeEl.classList?.values() ?? [])).find(s => s.startsWith('language-'))?.substring(9) ?? '';
-
-                markdown += `${lb}${fence}${lang}${lb}${codeEl.textContent}${lb}${fence}${lb}`;
-                return;
-            }
-
-            // If the element is an unordered list, add its items to the markdown string with the appropriate formatting
-            if (node.nodeName === "UL") {
-                markdown += lb;
-                markdown += htmlListToMarkdown(node, lb);
-                return;
-            }
-
-            // If the element is an ordered list, add its items to the markdown string with the appropriate formatting
-            if (node.nodeName === "OL") {
-                markdown += lb;
-                markdown += htmlListToMarkdown(node, lb);
-                return;
-            }
-
-            // If the element is a table, add its rows to the markdown string with the appropriate formatting
-            // Make sure a header deliniator is added after the header row contents.
-            if (node.nodeName === "TABLE") {
-                markdown += lb;
-                node.querySelectorAll("tr").forEach((tr, index) => {
-                    // Add header deliniator after header row.
-                    if (index === 1) {
-                        markdown += "|";
-                        tr.querySelectorAll("td").forEach(th => {
-                            markdown += `---|`;
-                        });
-                        markdown += lb;
-                    }
-                    markdown += "|";
-                    tr.querySelectorAll("td, th").forEach(td => {
-                        markdown += ` ${td.textContent} |`;
-                    });
-                    markdown += lb;
-                });
-                return;
-            }
-
-            // Fall back on unprocessed textContent if other tag is encountered.
-            markdown += `${lb}${node.textContent}${lb}`;
+            
+            ctx.setNode(node, {
+                lineBreaks: true,
+                indent: 0,
+                marker: ""
+            });
         });
 
-        // Return the resulting markdown string
+        ctx.newLine();
+
+        let markdown = ctx.getMarkdown();
+        if (markdown === `${lb}` || markdown === `${lb}${lb}`) {
+            markdown += "[ChatGPT ConvDown Meta] Failed to parse this conversation turn.";
+        }
+                
         return markdown;
     }
 
     const download = (copyToClipboard) => {
-        // Determine line break character based on platform. Default to LF on non-Windows platforms.
-        var lineBreak = "\n";
-        if(navigator.userAgent.indexOf("Windows") != -1) {
-            // CLRF on Windows
-            lineBreak = "\r\n";
-        }
-
         // Extract the name that OpenAI has assigned to the selected conversation
         const conversationName = document?.querySelector('title')?.innerText ?? 'Unknown';
 
-        let conversation = `# ${conversationName}${lineBreak}${lineBreak}`;
+        let conversation = `# ${conversationName}${lb}${lb}`;
         let foundConversation = false;
 
         for (const matchEl of document.querySelectorAll('[data-message-author-role]')) {
@@ -206,12 +324,10 @@ setTimeout(() => {
             }
             foundConversation = true;
             
-            let authorLabel = authorRole;
-            let isUser = false;
+            let authorLabel = authorRole;            
             switch (authorRole) {
                 case "user":
-                    authorLabel = "You";
-                    isUser = true;
+                    authorLabel = "You";                    
                     break;
                 case "assistant":
                     authorLabel = "ChatGPT";
@@ -219,11 +335,8 @@ setTimeout(() => {
             }
 
             // Value of the author role attribute should be "user" (You) or "assistant" (ChatGPT)
-            conversation += `## ${authorLabel}${
-                isUser
-                    ? `${lineBreak}${match.item(0)?.textContent ?? ''}${lineBreak}`
-                    : htmlToMarkdown(match, lineBreak)
-            }${lineBreak}`;      
+            conversation += `## ${authorLabel}${lb}`;
+            conversation += processConversationTurn(match);
         }
 
         if (!foundConversation) {
@@ -231,7 +344,7 @@ setTimeout(() => {
             return;
         }
         
-        console.log("Your conversation with ChatGPT:" + lineBreak + lineBreak + conversation);
+        console.log("Your conversation with ChatGPT:" + lb + lb + conversation);
 
         if (copyToClipboard) {
             navigator.clipboard.writeText(conversation);
