@@ -1,3 +1,8 @@
+```
+NOTE:
+This repository is now archived and will no longer receive any updates.
+```
+
 ChatGPT Conversation Downloader is a Firefox* extension to help you save your interesting conversation with ChatGPT as a Markdown (.md) file.
 
 *Should work on multiple browsers but mainly tested on Firefox by me, also not publised officially for other browsers at the moment.
